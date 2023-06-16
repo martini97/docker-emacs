@@ -1,9 +1,11 @@
 FROM ubuntu:22.04
 
+ARG EMACS_BRANCH=master
 ENV DEBIAN_FRONTEND=noninteractive
 ENV CC=/usr/bin/gcc-10
 ENV CXX=/usr/bin/gcc-10
 ENV LD_LIBRARY_PATH=/usr/local/lib/
+ENV PATH=/root/.local/bin:$PATH
 
 RUN sed -i 's/# deb-src/deb-src/' /etc/apt/sources.list
 RUN apt update
@@ -21,10 +23,9 @@ RUN apt install -y \
 
 RUN apt build-dep -y emacs
 
-RUN git clone --depth 1 --single-branch --branch emacs-29 git://git.savannah.gnu.org/emacs.git /emacs
-
 WORKDIR /emacs
-
+RUN git clone --depth 1 --single-branch --branch $EMACS_BRANCH \
+    git://git.savannah.gnu.org/emacs.git /emacs
 RUN ./autogen.sh
 RUN ./configure \
     --with-native-compilation=aot \
@@ -44,16 +45,14 @@ WORKDIR /tree-sitter-module
 RUN git clone --depth 1 https://github.com/casouri/tree-sitter-module /tree-sitter-module
 RUN ./batch.sh
 RUN mkdir -p /root/.config/emacs/
-RUN cp -r /tree-sitter-module/dist /$HOME/.config/emacs/tree-sitter
+RUN cp -r /tree-sitter-module/dist /root/.config/emacs/tree-sitter
 
-RUN mkdir -p /$HOME/.local/bin
+RUN mkdir -p /root/.local/bin
 RUN git clone --depth 1 https://github.com/cask/cask /cask
 RUN make -C /cask install
-
-ENV PATH /root/.local/bin:$PATH
 
 WORKDIR /app
 
 # Local Variables:
-# compile-command: "docker build -t martini97/emacs:29 ./29"
+# compile-command: "make build"
 # End:
