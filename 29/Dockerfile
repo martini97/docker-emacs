@@ -1,9 +1,5 @@
 FROM ubuntu:22.04
 
-ARG USERNAME=gnuser
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-
 ENV DEBIAN_FRONTEND=noninteractive
 ENV CC=/usr/bin/gcc-10
 ENV CXX=/usr/bin/gcc-10
@@ -47,20 +43,16 @@ RUN make install
 WORKDIR /tree-sitter-module
 RUN git clone --depth 1 https://github.com/casouri/tree-sitter-module /tree-sitter-module
 RUN ./batch.sh
-RUN groupadd --gid $USER_GID $USERNAME
-RUN useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
-RUN mkdir -p /home/$USERNAME/.config/emacs/
-RUN cp -r /tree-sitter-module/dist /home/$USERNAME/.config/emacs/tree-sitter
-RUN chown -R $USERNAME:$USERNAME /home/$USERNAME/
+RUN mkdir -p /root/.config/emacs/
+RUN cp -r /tree-sitter-module/dist /$HOME/.config/emacs/tree-sitter
 
-USER gnuser
-WORKDIR /home/gnuser
+RUN mkdir -p /$HOME/.local/bin
+RUN git clone --depth 1 https://github.com/cask/cask /cask
+RUN make -C /cask install
 
-RUN mkdir -p /home/$USERNAME/.local/bin
-RUN git clone --depth 1 https://github.com/cask/cask /home/$USERNAME/cask
-RUN make -C cask install
+ENV PATH /root/.local/bin:$PATH
 
-ENV PATH /home/$USERNAME/.local/bin:$PATH
+WORKDIR /app
 
 # Local Variables:
 # compile-command: "docker build -t martini97/emacs:29 ./29"
